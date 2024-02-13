@@ -4,7 +4,7 @@
 def not_blank(question):
 
     while True:
-        response = input(question).strip
+        response = input(question).strip()
 
         # if the response is blank, outputs error
         if response == "":
