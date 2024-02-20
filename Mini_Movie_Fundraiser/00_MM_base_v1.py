@@ -1,23 +1,6 @@
+import pandas
+
 # Functions at the top
-
-# checks user choice is valid according to a list given in main routine
-def user_choice(question, valid_list):
-    # error code
-    error = f"Please choose a valid input from this list, {valid_list}."
-
-    while True:
-        # Ask the user if they have played before
-        print("")
-        response = input(question).lower()
-
-        # If they say yes, output 'program continues'
-        for item in valid_list:
-            if response == item[0] or response == item:
-                return item
-
-        # output error if item not in list, checks item if it is in valid_list, then continues to this.
-        print(f"{error}")
-
 
 # function checks that the users input is not blank
 def not_blank(question):
@@ -81,31 +64,49 @@ def string_checker(question, valid_list, num_letters):
         print(f"{error}\n")
 
 
+# currency formatting function
+def currency(x):
+    return f"${x:.2f}"
+
+
 # Main Routine
 # set maximum number of tickets below
-MAX_TICKETS = 3  # constant so uppercase.
+MAX_TICKETS = 5  # constant so uppercase.
 
 yes_no_list = ['yes', 'no']  # List of choices for yes/no questions
 payment_list = ['cash', 'credit']  # list for preferred payment methods.
 
 tickets_sold = 0
 
+# dictionaries to hold ticket details
+all_names = []
+all_ticket_costs = []
+all_surcharge = []
+
+# dictionary used to create data frame: column name:list
+mini_movie_dict = {
+    "Name": all_names,
+    "Ticket Price": all_ticket_costs,
+    "Surcharge": all_surcharge
+}
+
+
 # Ask user if they want to see the instructions
-see_instructions = user_choice("Do you want to read the instructions? ", yes_no_list)
+see_instructions = string_checker("Do you want to read the instructions? ", yes_no_list, 1)
 
 if see_instructions == 'yes':
-    print("Instructions go here")
+    print("Instructions go here.")
 
 print()
 
 # loop to sell tickets
 while tickets_sold < MAX_TICKETS:
-    name = not_blank("Please enter your name or 'xxx' to quit: ")  # checks input to make sure it is not blank
+    name = not_blank("\nPlease enter your name or 'xxx' to quit: ")  # checks input to make sure it is not blank
 
     if name == 'xxx':  # break if user inputs xxx
         break
 
-    age = num_checker("What is your age? ")  # Checks to make sure users input is valid for age.
+    age = num_checker("\nWhat is your age? ")  # Checks to make sure users input is valid for age.
 
     if 12 <= age <= 120:  # If user is between 12 and 120 program continues
         pass
@@ -122,7 +123,50 @@ while tickets_sold < MAX_TICKETS:
     # ask user for payment method
     payment_method = string_checker("Choose a payment method (cash / credit): ", payment_list, 2)
 
+    if payment_method == "cash":
+        surcharge = 0
+
+    else:
+        # calculate 5% surcharge if users are paying by credit
+        surcharge = ticket_cost * 0.05
+
     tickets_sold += 1  # Increase amount of tickets sold
+
+    # add ticket name, cost and surcharge to lists
+    all_names.append(name)
+    all_ticket_costs.append(ticket_cost)
+    all_surcharge.append(surcharge)
+
+
+mini_movie_frame = pandas.DataFrame(mini_movie_dict)  # Data Frame (Pandas), frames the data sensibly
+mini_movie_frame = mini_movie_frame.set_index('Name')
+
+# Calculate the total ticket cost (ticket + surcharge)
+mini_movie_frame['Total'] = mini_movie_frame['Surcharge'] + mini_movie_frame['Ticket Price']
+
+# Calculate total Profit
+mini_movie_frame['Profit'] = mini_movie_frame['Ticket Price'] - 5
+
+# Calculate ticket and profit totals
+total = mini_movie_frame['Total'].sum()
+profit = mini_movie_frame['Profit'].sum()
+
+# Currency formatting (uses the currency function)
+add_dollars = ['Ticket Price', 'Surcharge', 'Total', 'Profit']
+for var_item in add_dollars:  # for each variable
+    mini_movie_frame[var_item] = mini_movie_frame[var_item].apply(currency)
+
+print("---- Ticket Data ----")
+print()
+
+# output table with ticket data
+print(mini_movie_frame)
+
+print()
+# output total ticket sales and profit
+print()
+print(f"Total Ticket Sales: ${total:.2f}")
+print(f"Total Profit: ${profit:.2f}")
 
 remaining_tickets = MAX_TICKETS - tickets_sold
 
